@@ -1,0 +1,32 @@
+services:
+  db:
+    # image: postgres:18.3
+    image: postgres:17.9
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # POSTGRES_DB: rails_app_development
+    volumes:
+      - pgdata:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+  web:
+    depends_on:
+      - db
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile-new
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/rails_app_development
+      RAILS_ENV: development
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+volumes:
+  pgdata:
+
+# sudo chown -R $(id -u):$(id -g) .
+
+# docker compose --file docker-compose-new.yml up --build --remove-orphans
