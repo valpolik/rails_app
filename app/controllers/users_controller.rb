@@ -23,6 +23,7 @@ class UsersController < ApplicationController
     @user = User.new(user_params)
 
     if @user.save
+      NotificationService.call('user_created', { email: @user.email, id: @user.id })
       render json: { user: @user.as_json(only: user_readable_attributes), token: @user.generate_token_for(:authentication) }, status: :created
     else
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
@@ -35,6 +36,7 @@ class UsersController < ApplicationController
 
   def update
     if @user.update(user_params)
+      NotificationService.call('user_updated', { email: @user.email, id: @user.id })
       render json: { user: @user.as_json(only: user_readable_attributes) }
     else
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
@@ -43,6 +45,7 @@ class UsersController < ApplicationController
 
   def destroy
     @user.destroy
+    NotificationService.call('user_destroyed', { email: @user.email, id: @user.id })
     head :no_content
   end
 
