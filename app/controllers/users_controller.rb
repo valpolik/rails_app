@@ -5,7 +5,18 @@ class UsersController < ApplicationController
   before_action :authorize_user!, only: [:show, :update, :destroy]
 
   def index
-    render json: { users: User.all.as_json(only: user_readable_attributes) }
+    sql_top_users = <<~SQL.squish
+      SELECT users.*, COUNT(posts.id) AS posts_count
+      FROM users
+      LEFT OUTER JOIN posts ON posts.user_id = users.id
+      GROUP BY users.id
+      ORDER BY posts_count DESC, users.id ASC
+    SQL
+
+    users = User.from("(#{sql_top_users}) AS users")
+
+    # render json: { users: User.all.as_json(only: user_readable_attributes) }
+    render json: { users: users.as_json(only: user_readable_attributes, methods: :posts_count) }
   end
 
   def create
